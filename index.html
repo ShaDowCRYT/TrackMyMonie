@@ -2215,6 +2215,140 @@
         display: none;
       }
     }
+
+    /* ─── Page Transition ─── */
+    @keyframes pageFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page.active {
+      display: block;
+      animation: pageFadeIn 200ms ease;
+    }
+
+    /* ─── Validation Messages ─── */
+    .validation-msg {
+      color: var(--danger);
+      font-size: 0.72rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    .validation-msg.visible {
+      display: block;
+    }
+
+    /* ─── Categories ─── */
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .category-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.15rem 1.25rem;
+      box-shadow: var(--card-shadow);
+      position: relative;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .category-card-top {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .category-icon-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .category-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .category-card-name {
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .category-card-name:hover {
+      color: var(--gold);
+    }
+
+    .category-card-amount {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gold);
+      cursor: pointer;
+    }
+
+    .category-card-amount:hover {
+      opacity: 0.8;
+    }
+
+    .category-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .category-bar {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      overflow: hidden;
+    }
+
+    .category-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .category-pct {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    .cat-remove-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 0.2rem;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+      line-height: 1;
+    }
+
+    .cat-remove-btn:hover {
+      color: var(--danger);
+      background: var(--danger-dim);
+    }
+
+    @media (max-width: 700px) {
+      .categories-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 
@@ -2397,6 +2531,7 @@
         <div class="input-row">
           <input type="text" id="nameInput" placeholder="Description" autocomplete="off">
         </div>
+        <div class="validation-msg" id="nameError"></div>
 
         <div class="input-row2">
           <div class="category-wrapper">
@@ -2415,6 +2550,7 @@
           <input type="number" id="amountInput" placeholder="₦ Amount" min="0" autocomplete="off">
           <button class="btn-gold" id="addBtn">Add</button>
         </div>
+        <div class="validation-msg" id="amountError"></div>
 
         <ul class="expense-list" id="expenseList">
           <li class="empty-state" id="emptyState">No entries yet. Start logging.</li>
@@ -2443,11 +2579,14 @@
     </div>
 
     <div class="page" id="page-categories">
-      <div class="placeholder-page">
-        <div class="icon-big">🏷️</div>
-        <h2>Categories</h2>
-        <p>Coming soon — organize your spending by category.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem;">
+        <div>
+          <div style="font-size:1.25rem;font-weight:700;">Categories</div>
+          <div style="font-size:0.82rem;color:var(--text-secondary);">Track your spending by category.</div>
+        </div>
       </div>
+      <div class="categories-grid" id="categoriesGrid"></div>
+      <button class="add-card-btn" id="addCategoryBtn">+ Add Category</button>
     </div>
 
     <div class="page" id="page-analytics">
@@ -2596,6 +2735,16 @@
         { id: 's3', name: 'DSTV', cost: 16500, renewalDate: '05 Jul', color: '#ff6b00' },
         { id: 's4', name: 'iCloud', cost: 2500, renewalDate: '22 Jun', color: '#555555' }
       ],
+      categories: [
+        { id: 'cat1', name: 'Food', amount: 15000, color: '#c8a84b' },
+        { id: 'cat2', name: 'Transport', amount: 10000, color: '#3b82f6' },
+        { id: 'cat3', name: 'Bills', amount: 16000, color: '#ef6b6b' },
+        { id: 'cat4', name: 'Entertainment', amount: 5000, color: '#a855f7' },
+        { id: 'cat5', name: 'Health', amount: 3500, color: '#ef4444' },
+        { id: 'cat6', name: 'Savings', amount: 20000, color: '#22c55e' },
+        { id: 'cat7', name: 'Shopping', amount: 8000, color: '#f97316' },
+        { id: 'cat8', name: 'Other', amount: 2000, color: '#9ca3af' }
+      ],
 
       init() {
         this.loadState();
@@ -2616,6 +2765,7 @@
             this.cards = data.cards || this.cards;
             this.goals = data.goals || this.goals;
             this.subscriptions = data.subscriptions || this.subscriptions;
+            this.categories = data.categories || this.categories;
             this.darkMode = data.darkMode || false;
             this.currency = data.currency || 'NGN';
             if (data.darkMode) {
@@ -2638,6 +2788,7 @@
             cards: this.cards,
             goals: this.goals,
             subscriptions: this.subscriptions,
+            categories: this.categories,
             darkMode: this.darkMode,
             currency: this.currency,
             collapsedSections: this.collapsedSections,
@@ -3076,6 +3227,77 @@
         c.innerHTML = h;
       },
 
+      renderCategories() {
+        var grid = document.getElementById('categoriesGrid');
+        if (!grid) return;
+        var totalBudget = this.categories.reduce(function(s, c) { return s + c.amount; }, 0) || 1;
+        var h = '';
+        this.categories.forEach(function(c) {
+          var pct = Math.round((c.amount / totalBudget) * 100);
+          h += '<div class="category-card" data-id="' + c.id + '">';
+          h += '<button class="cat-remove-btn" data-id="' + c.id + '" title="Delete category">&times;</button>';
+          h += '<div class="category-card-top">';
+          h += '<div class="category-icon-circle" style="background:' + c.color + ';"></div>';
+          h += '<div class="category-card-info">';
+          h += '<div class="category-card-name" data-id="' + c.id + '" data-prop="name">' + c.name + '</div>';
+          h += '<div class="category-card-amount" data-id="' + c.id + '" data-prop="amount">' + this.formatCurrency(c.amount) + '</div>';
+          h += '</div></div>';
+          h += '<div class="category-bar-wrap">';
+          h += '<div class="category-bar"><div class="category-bar-fill" style="width:' + pct + '%;background:' + c.color + ';"></div></div>';
+          h += '<span class="category-pct">' + pct + '%</span>';
+          h += '</div></div>';
+        }.bind(this));
+        grid.innerHTML = h;
+
+        var self = this;
+        grid.querySelectorAll('.category-card-name').forEach(function(el) {
+          el.addEventListener('dblclick', function() {
+            var id = el.dataset.id;
+            var cat = self.categories.find(function(c) { return c.id === id; });
+            if (!cat) return;
+            var newName = prompt('Edit category name:', cat.name);
+            if (newName && newName.trim()) {
+              cat.name = newName.trim();
+              self.saveCategories();
+              self.renderCategories();
+            }
+          });
+        });
+        grid.querySelectorAll('.category-card-amount').forEach(function(el) {
+          el.addEventListener('dblclick', function() {
+            var id = el.dataset.id;
+            var cat = self.categories.find(function(c) { return c.id === id; });
+            if (!cat) return;
+            var raw = prompt('Edit amount:', cat.amount);
+            if (raw && !isNaN(parseFloat(raw)) && parseFloat(raw) >= 0) {
+              cat.amount = parseFloat(raw);
+              self.saveCategories();
+              self.renderCategories();
+            }
+          });
+        });
+        grid.querySelectorAll('.cat-remove-btn').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var id = btn.dataset.id;
+            var idx = self.categories.findIndex(function(c) { return c.id === id; });
+            if (idx !== -1) {
+              self.categories.splice(idx, 1);
+              self.saveCategories();
+              self.renderCategories();
+            }
+          });
+        });
+      },
+
+      saveCategories() {
+        try {
+          var data = JSON.parse(localStorage.getItem('tmm_state') || '{}');
+          data.categories = this.categories;
+          localStorage.setItem('tmm_state', JSON.stringify(data));
+        } catch (e) { }
+      },
+
       initSections() {
         document.querySelectorAll('.side-section-header').forEach(el => {
           const section = el.dataset.section;
@@ -3167,6 +3389,7 @@
         this.renderGoals();
         this.renderSubscriptions();
         this.renderAnalytics();
+        this.renderCategories();
         this.updateSidebar();
       },
 
@@ -3394,8 +3617,24 @@
           const name = document.getElementById('nameInput').value.trim();
           const amount = parseFloat(document.getElementById('amountInput').value);
           const category = document.getElementById('categoryInput').value;
-          if (!name) { document.getElementById('nameInput').focus(); return; }
-          if (isNaN(amount) || amount <= 0) { document.getElementById('amountInput').focus(); return; }
+          const nameErr = document.getElementById('nameError');
+          const amtErr = document.getElementById('amountError');
+          let valid = true;
+          nameErr.classList.remove('visible');
+          amtErr.classList.remove('visible');
+          if (!name) {
+            nameErr.textContent = 'Please enter a description.';
+            nameErr.classList.add('visible');
+            document.getElementById('nameInput').focus();
+            valid = false;
+          }
+          if (isNaN(amount) || amount <= 0) {
+            amtErr.textContent = 'Please enter a valid amount.';
+            amtErr.classList.add('visible');
+            if (valid) document.getElementById('amountInput').focus();
+            valid = false;
+          }
+          if (!valid) return;
           let type = this.filter;
           if (type !== 'income' && type !== 'expense') type = 'expense';
           this.addTransaction(name, amount, type, category);
@@ -3409,6 +3648,13 @@
           el.addEventListener('keydown', e => {
             if (e.key === 'Enter') document.getElementById('addBtn').click();
           });
+        });
+
+        document.getElementById('nameInput').addEventListener('input', () => {
+          document.getElementById('nameError').classList.remove('visible');
+        });
+        document.getElementById('amountInput').addEventListener('input', () => {
+          document.getElementById('amountError').classList.remove('visible');
         });
 
         document.querySelectorAll('.filter-tab').forEach(el => {
@@ -3590,6 +3836,18 @@
           });
           this.saveState();
           this.renderSubscriptions();
+        });
+
+        document.getElementById('addCategoryBtn').addEventListener('click', () => {
+          const colors = ['#c8a84b', '#3b82f6', '#ef6b6b', '#a855f7', '#22c55e', '#f97316', '#06b6d4', '#ec4899', '#e50914', '#555555'];
+          this.categories.push({
+            id: 'cat_' + Date.now(),
+            name: 'New Category',
+            amount: 0,
+            color: colors[this.categories.length % colors.length]
+          });
+          this.saveCategories();
+          this.renderCategories();
         });
       }
     };
